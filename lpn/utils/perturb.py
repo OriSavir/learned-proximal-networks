@@ -32,7 +32,7 @@ def perturb(x, perturb_mode, perturb_kw):
     """
     if perturb_mode == "gaussian":
         sigma = perturb_kw["sigma"]
-        return np.clip(x + sigma * np.random.normal(size=x.shape), 0, 1)
+        return np.clip(x + sigma * np.random.normal(size=x.shape), 0, 1) ####
     elif perturb_mode == "uniform":
         sigma = perturb_kw["sigma"]
         return np.clip(
