@@ -264,7 +264,7 @@ def save_checkpoint(args, global_step, model, optimizer, loss, filename):
 
 def train_step(model, optimizer, batch, loss_func, sigma_noise, device):
     clean_images = batch["image"].to(device)
-    noise = torch.randn_like(clean_images)
+    noise = torch.randn_like(clean_images) ###266
     if type(sigma_noise) == list:
         # uniform random noise level
         sigma_noise = (
@@ -272,7 +272,7 @@ def train_step(model, optimizer, batch, loss_func, sigma_noise, device):
             + sigma_noise[0]
         )
     noisy_images = clean_images + sigma_noise * noise
-    out = model(noisy_images)
+    out = model(noisy_images) ##to 275
 
     loss = loss_func(out, clean_images)
     optimizer.zero_grad()

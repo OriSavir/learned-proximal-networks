@@ -25,6 +25,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 dataset_config_path = "../exps/mnist/configs/mnist/test_dataset.json"
 
+if not os.path.exists('denoised_image_test'):
+    os.makedirs('denoised_image_test')
 
 def run_test(network_type, sigma, model_path, dataset_config_path, model_weight_path):
     # load model and dataset
@@ -65,15 +67,20 @@ def run_test(network_type, sigma, model_path, dataset_config_path, model_weight_
             plt.subplot(1, 3, 3)
             plt.imshow(denoised_images[0, 0].cpu().detach().numpy(), cmap="gray")
             plt.title("Denoised Image")
+
+            #give the whole plot a title
+            plt.suptitle(f"{network_type} Model, Sigma: {sigma}")
+            
+            # calculate the average loss
+            average_loss = total_loss / (step + 1)
+            mse_noised_clean = mse_loss(noised_images, clean_images)
+            plt.text(0.5, 0.05, f"MSE between output and clean image: {average_loss}", ha='center', va='center', transform=plt.gcf().transFigure)
+            plt.text(0.5, 0.1, f"MSE between noised and clean image: {mse_noised_clean}", ha='center', va='center', transform=plt.gcf().transFigure)
+            
             plt.show()
-            img_name = f"denoised_image_{network_type}_{sigma}.png"
+            img_name = f"denoised_image_test/{network_type}_sigma_{sigma}.png"
             plt.savefig(img_name)
             break
-
-            
-
-    average_loss = total_loss / (step + 1)
-    print(f"Average Loss: {average_loss}")
     return average_loss
 
 ne_model_config_path = "../exps/mnist/configs/mnist/model_ne.json"
@@ -81,14 +88,22 @@ ne_model_weight_path = "../exps/mnist/experiments/ne_mnist/model.pt"
 lpn_model_config_path = "../exps/mnist/configs/mnist/model.json"
 lpn_model_weight_path = "../exps/mnist/experiments/mnist/model.pt"
 dataset_config_path = "../exps/mnist/configs/mnist/test_dataset.json"
+old_ne_model_config_path = "../exps/mnist/configs/mnist/model_old_ne.json"
+old_ne_model_weight_path = "../exps/mnist/experiments/old_ne_mnist/model.pt"
 
 
-print("NE Model Test")
-avg_loss_ne = run_test("NE", 0.05, ne_model_config_path, dataset_config_path, ne_model_weight_path)
+sigma_levels = [0.05, 0.1, 0.2, 0.3]
 
-print("LPN Model Test")
-avg_loss_lpn = run_test("LPN", 0.05, lpn_model_config_path, dataset_config_path, lpn_model_weight_path)
+for sigma in sigma_levels:
+    print(f"Sigma: {sigma}")
+    print("NE Model Test")
+    avg_loss_ne = run_test("NE", sigma, ne_model_config_path, dataset_config_path, ne_model_weight_path)
 
-print("Difference (NE - LPN):", avg_loss_ne - avg_loss_lpn)
+    print("LPN Model Test")
+    avg_loss_lpn = run_test("LPN", sigma, lpn_model_config_path, dataset_config_path, lpn_model_weight_path)
+
+    print("Old NE Model Test")
+    avg_loss_old_ne = run_test("Old NE", sigma, old_ne_model_config_path, dataset_config_path, old_ne_model_weight_path)
+
 
 

@@ -78,18 +78,8 @@ class LPN(nn.Module):
                     blind=True,
                     padding=1
                 ),
-                AffineConv2d(
-                    in_channels=hidden * 7 * 7,
-                    out_channels=64,
-                    kernel_size=1,
-                ),
-                AffineConv2d(
-                    in_channels=64,
-                    out_channels=1,
-                    kernel_size=1,
-                )
-                # nn.Linear(hidden * 7 * 7, 64, bias=False),
-                # nn.Linear(64, 1, bias=False),
+                nn.Linear(hidden * 7 * 7, 64, bias=False),
+                nn.Linear(64, 1, bias=False),
             ]
         )
 
@@ -122,12 +112,7 @@ class LPN(nn.Module):
                     blind=True,
                     padding=1
                 ),
-                AffineConv2d(
-                    in_channels= 7 * 7 * in_dim,
-                    out_channels=64,
-                    kernel_size=1,
-                )
-                # nn.Linear(7 * 7 * in_dim, 64, bias=False),
+                nn.Linear(7 * 7 * in_dim, 64, bias=False),
             ]
         )
 
@@ -148,17 +133,13 @@ class LPN(nn.Module):
         x_scaled = nn.functional.interpolate(
             x, (size[-1], size[-1]), mode="bilinear"
         ).reshape(x.shape[0], -1)
-        #y = self.lin[-2](y) + self.res[-1](x_scaled)
-        #modify y to be 4d
-        y = self.lin[-2](y.unsqueeze(-1).unsqueeze(-1)) + self.res[-1](x_scaled.unsqueeze(-1).unsqueeze(-1))
-
+        y = self.lin[-2](y) + self.res[-1](x_scaled)
         y = self.act(y)
 
-        y = self.lin[-1](y).squeeze(-1).squeeze(-1)
+        y = self.lin[-1](y)
         # return shape: (batch, 1)
 
         y = y**2 + self.alpha * x.pow(2).sum(dim=(1, 2, 3)).unsqueeze(1)
-
         return y
 
     def init_weights(self, mean, std):
