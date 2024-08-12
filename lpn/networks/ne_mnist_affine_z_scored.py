@@ -176,6 +176,8 @@ class LPN(nn.Module):
     def forward(self, x):
         with torch.enable_grad():
             #modify x here: subtract mean, add it back later
+            mean_x = x.mean()
+            x = x - mean_x
             if not x.requires_grad:
                 x.requires_grad = True
             x_ = x
@@ -183,5 +185,6 @@ class LPN(nn.Module):
             grad = torch.autograd.grad(
                 y.sum(), x_, retain_graph=True, create_graph=True
             )[0]
+            grad = grad + mean_x
             #add mean of x back to grad here
         return grad

@@ -42,92 +42,30 @@ class LPN(nn.Module):
         self.hidden = hidden
         self.lin = nn.ModuleList(
             [
-                AffineConv2d(
-                    in_channels=in_dim,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=stride,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels=hidden,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=2,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels=hidden,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=stride,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels=hidden,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=2,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels=hidden * 7 * 7,
-                    out_channels=64,
-                    kernel_size=1,
-                ),
-                AffineConv2d(
-                    in_channels=64,
-                    out_channels=1,
-                    kernel_size=1,
-                )
-                # nn.Linear(hidden * 7 * 7, 64, bias=False),
-                # nn.Linear(64, 1, bias=False),
+                nn.Conv2d(
+                    in_dim, hidden, 3, bias=False, stride=1, padding=1, dilation=1
+                ),  # 28
+                nn.Conv2d(
+                    hidden, hidden, 3, bias=False, stride=2, padding=1, dilation=1
+                ),  # 14
+                nn.Conv2d(
+                    hidden, hidden, 3, bias=False, stride=1, padding=1, dilation=1
+                ),  # 14
+                nn.Conv2d(
+                    hidden, hidden, 3, bias=False, stride=2, padding=1, dilation=1
+                ),  # 7
+                nn.Linear(hidden * 7 * 7, 64, bias=False),
+                nn.Linear(64, 1, bias=False),
             ]
         )
 
+
         self.res = nn.ModuleList(
             [
-                AffineConv2d(
-                    in_channels=in_dim,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=2,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels=in_dim,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=stride,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels=in_dim,
-                    out_channels=hidden,
-                    kernel_size=kernel_size,
-                    stride=2,
-                    dilation=dilation,
-                    blind=True,
-                    padding=1
-                ),
-                AffineConv2d(
-                    in_channels= 7 * 7 * in_dim,
-                    out_channels=64,
-                    kernel_size=1,
-                )
-                # nn.Linear(7 * 7 * in_dim, 64, bias=False),
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1),  # 14
+                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, dilation=1),  # 14
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1),  # 7
+                nn.Linear(7 * 7 * in_dim, 64),
             ]
         )
 
