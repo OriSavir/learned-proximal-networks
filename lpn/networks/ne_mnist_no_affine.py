@@ -59,13 +59,12 @@ class LPN(nn.Module):
             ]
         )
 
-
         self.res = nn.ModuleList(
             [
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1),  # 14
-                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, dilation=1),  # 14
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1),  # 7
-                nn.Linear(7 * 7 * in_dim, 64),
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1, bias=False),  # 14
+                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, dilation=1, bias=False),  # 14
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1, bias=False),  # 7
+                nn.Linear(7 * 7 * in_dim, 64, bias=False),
             ]
         )
 
@@ -86,13 +85,13 @@ class LPN(nn.Module):
         x_scaled = nn.functional.interpolate(
             x, (size[-1], size[-1]), mode="bilinear"
         ).reshape(x.shape[0], -1)
-        #y = self.lin[-2](y) + self.res[-1](x_scaled)
+        y = self.lin[-2](y) + self.res[-1](x_scaled)
         #modify y to be 4d
-        y = self.lin[-2](y.unsqueeze(-1).unsqueeze(-1)) + self.res[-1](x_scaled.unsqueeze(-1).unsqueeze(-1))
+        #y = self.lin[-2](y.unsqueeze(-1).unsqueeze(-1)) + self.res[-1](x_scaled.unsqueeze(-1).unsqueeze(-1))
 
         y = self.act(y)
 
-        y = self.lin[-1](y).squeeze(-1).squeeze(-1)
+        y = self.lin[-1](y)
         # return shape: (batch, 1)
 
         y = y**2 + self.alpha * x.pow(2).sum(dim=(1, 2, 3)).unsqueeze(1)

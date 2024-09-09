@@ -40,6 +40,7 @@ class LPN(nn.Module):
         '''
 
         self.hidden = hidden
+        self.hidden = hidden
         self.lin = nn.ModuleList(
             [
                 nn.Conv2d(
@@ -59,13 +60,12 @@ class LPN(nn.Module):
             ]
         )
 
-
         self.res = nn.ModuleList(
             [
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1),  # 14
-                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, dilation=1),  # 14
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1),  # 7
-                nn.Linear(7 * 7 * in_dim, 64),
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1, bias=False),  # 14
+                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, dilation=1, bias=False),  # 14
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, dilation=1, bias=False),  # 7
+                nn.Linear(7 * 7 * in_dim, 64, bias=False),
             ]
         )
 
