@@ -20,25 +20,25 @@ class LPN(nn.Module):
         self.hidden = hidden
         self.lin = nn.ModuleList(
             [
-                nn.Conv2d(in_dim, hidden, 3, bias=True, stride=1, padding=1, padding_mode="reflect"),  # 128
+                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 128
                 nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 64
                 nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 64
                 nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 32
                 nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 32
                 nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 16
                 nn.Conv2d(hidden, 64, 16, bias=False, stride=1, padding=0, padding_mode="reflect"),  # 1
-                nn.Linear(64, 1),
+                nn.Linear(64, 1, bias=False),
             ]
         )
 
         self.res = nn.ModuleList(
             [
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1, padding_mode="reflect"),  # 16
-                nn.Conv2d(in_dim, 64, 16, stride=1, padding=0, padding_mode="reflect"),  # 1
+                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 64
+                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 64
+                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 32
+                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 32
+                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 16
+                nn.Conv2d(in_dim, 64, 16, bias=False, stride=1, padding=0, padding_mode="reflect"),  # 1
             ]
         )
 
@@ -98,7 +98,7 @@ class LPN(nn.Module):
             if not x.requires_grad:
                 x.requires_grad = True
             #get channel-wise mean of x and subtract from input
-            mean_x = x.mean(dim=(1,2,3), keepdim=True)
+            mean_x = x.mean(dim=(2,3), keepdim=True)
             x = x - mean_x
             x_ = x
             y = self.scalar(x_)
