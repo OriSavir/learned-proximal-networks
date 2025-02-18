@@ -106,14 +106,14 @@ LPN_SSIMs = []
 for sigma_blur, sigma_noise in zip(sigma_blur, sigma_noise):
     args.operator_config.sigma_blur = sigma_blur
     args.sigma_noise = sigma_noise
-    args.out_dir = f"exps/celeba/results/inverse/deblur/blur={sigma_blur}_noise={sigma_noise}/admm"
+    args.out_dir = f"exps/celeba/ne_lpn_results/inverse/deblur/blur={sigma_blur}_noise={sigma_noise}/admm"
     NE_results = main_celeba(args)
     NE_PSNRs.append((NE_results["PSNR_mean"], NE_results["PSNR_std"]))
     NE_SSIMs.append((NE_results["SSIM_mean"], NE_results["SSIM_std"]))
 
     args_lpn.operator_config.sigma_blur = sigma_blur
     args_lpn.sigma_noise = sigma_noise
-    args_lpn.out_dir = f"exps/celeba/results/inverse/deblur/blur={sigma_blur}_noise={sigma_noise}/admm"
+    args_lpn.out_dir = f"exps/celeba/original_lpn_results/inverse/deblur/blur={sigma_blur}_noise={sigma_noise}/admm"
     LPN_results = main_celeba(args_lpn)
     LPN_PSNRs.append((LPN_results["PSNR_mean"], LPN_results["PSNR_std"]))
     LPN_SSIMs.append((LPN_results["SSIM_mean"], LPN_results["SSIM_std"]))
@@ -126,11 +126,11 @@ LPN_PSNRs = np.array(LPN_PSNRs, dtype=np.float64)
 NE_SSIMs = np.array(NE_SSIMs, dtype=np.float64)
 LPN_SSIMs = np.array(LPN_SSIMs, dtype=np.float64)
 
-np.save("exps/celeba/results/NE_PSNRs.npy", NE_PSNRs)
-np.save("exps/celeba/results/LPN_PSNRs.npy", LPN_PSNRs)
+np.save("exps/celeba/ne_lpn_results/NE_PSNRs.npy", NE_PSNRs)
+np.save("exps/celeba/ne_lpn_results/LPN_PSNRs.npy", LPN_PSNRs)
 
-np.save("exps/celeba/results/NE_SSIMs.npy", NE_SSIMs)
-np.save("exps/celeba/results/LPN_SSIMs.npy", LPN_SSIMs)
+np.save("exps/celeba/original_lpn_results/NE_SSIMs.npy", NE_SSIMs)
+np.save("exps/celeba/original_lpn_results/LPN_SSIMs.npy", LPN_SSIMs)
 
 # plot the reslts into two graphs
 
