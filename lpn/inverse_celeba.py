@@ -228,8 +228,18 @@ def main_celeba(args):
         ssim = skimage_ssim(x_list[i], xhat, data_range=1.0, channel_axis=2)
         metric_list.append([psnr, ssim])
     metric_list = np.array(metric_list)
-    print(f"PSNR: {metric_list[:, 0].mean():.4f} +- {metric_list[:, 0].std():.4f}")
-    print(f"SSIM: {metric_list[:, 1].mean():.4f} +- {metric_list[:, 1].std():.4f}")
+    PSNR_mean = metric_list[:, 0].mean()
+    PSNR_std = metric_list[:, 0].std()
+    SSIM_mean = metric_list[:, 1].mean()
+    SSIM_std = metric_list[:, 1].std()
+    print(f"PSNR: {PSNR_mean:.4f} +- {PSNR_std:.4f}")
+    print(f"SSIM: {SSIM_mean:.4f} +- {SSIM_std:.4f}")
+    return {
+        "PSNR_mean": PSNR_mean,
+        "PSNR_std": PSNR_std,
+        "SSIM_mean": SSIM_mean,
+        "SSIM_std": SSIM_std,
+    }
 
 
 def load_model(model_config, model_path):
