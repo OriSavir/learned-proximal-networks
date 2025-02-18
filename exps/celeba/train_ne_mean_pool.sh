@@ -1,11 +1,10 @@
-for NOISE in 0.1; do
-    python lpn/train.py \
-    --exp_dir exps/celeba/models/ne_lpn_64ch/s=${NOISE} \
+python lpn/train_noise_sched.py \
+    --exp_dir exps/celeba/models/ne_mean_pool/s=scheduled\
     --dataset_config_path exps/celeba/configs/dataset.json \
-    --model_config_path exps/celeba/configs/model_ne.json \
+    --model_config_path exps/celeba/configs/model_ne_mean_pool.json \
     --train_batch_size 64 \
     --dataloader_num_workers 8 \
-    --num_steps 34000 \
+    --num_steps 40000 \
     --num_steps_pretrain 20000 \
     --pretrain_lr 1e-3 \
     --lr 1e-4 \
@@ -14,5 +13,5 @@ for NOISE in 0.1; do
     --validate_every_n_steps 1000 \
     --image_size 128 \
     --num_channels 3 \
-    --sigma_noise ${NOISE}
-done
+    --sigma_noise 0.1 \
+    --scheduled_noise

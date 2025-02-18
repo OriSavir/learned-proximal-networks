@@ -1,0 +1,9 @@
+{
+    "model": "ne_mnist_architecture_3ch_23",
+    "params": {
+        "in_dim": 3,
+        "hidden": 64, 
+        "beta": 10, 
+        "alpha": 0.01
+    }
+}

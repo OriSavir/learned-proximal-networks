@@ -1,0 +1,7 @@
+{
+    "dataset": "celeba_small_3ch",
+    "params": {
+        "root": "../../data/celeba/",
+        "image_size": 128
+    }
+}

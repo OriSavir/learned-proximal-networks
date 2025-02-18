@@ -1,0 +1,9 @@
+{
+    "model": "ne_lpn_affine",
+    "params": {
+        "in_dim": 3,
+        "hidden": 32, 
+        "beta": 100,
+        "alpha": 1e-6
+    }
+}

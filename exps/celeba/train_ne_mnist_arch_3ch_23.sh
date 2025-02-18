@@ -1,8 +1,7 @@
-for NOISE in 0.1; do
-    python lpn/train.py \
-    --exp_dir exps/celeba/models/ne_sp/s=${NOISE} \
-    --dataset_config_path exps/celeba/configs/dataset.json \
-    --model_config_path exps/celeba/configs/model_ne_relu.json \
+python lpn/train_noise_sched.py \
+    --exp_dir exps/celeba/models/celeba_mnist_3ch_dim23/s=scheduled\
+    --dataset_config_path exps/celeba/configs/dataset_small_3ch.json \
+    --model_config_path exps/celeba/configs/model_celeba_small_3ch.json \
     --train_batch_size 64 \
     --dataloader_num_workers 8 \
     --num_steps 40000 \
@@ -14,5 +13,5 @@ for NOISE in 0.1; do
     --validate_every_n_steps 1000 \
     --image_size 128 \
     --num_channels 3 \
-    --sigma_noise ${NOISE}
-done
+    --sigma_noise 0.1 \
+    --scheduled_noise

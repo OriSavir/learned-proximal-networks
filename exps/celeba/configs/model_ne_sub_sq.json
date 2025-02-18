@@ -1,0 +1,9 @@
+{
+    "model": "ne_128_sub_sq",
+    "params": {
+        "in_dim": 3,
+        "hidden": 256, 
+        "beta": 100,
+        "alpha": 1e-6
+    }
+}

@@ -19,7 +19,7 @@ args.sigma_noise = 0.02
 
 args.prox_config = OmegaConf.create()
 args.prox_config.prox = "lpn"
-args.prox_config.model_path = "exps/celeba/models/ne_lpn/s=0.05/model.pt"
+args.prox_config.model_path = "exps/celeba/models/ne_lpn_64ch/s=0.1/model.pt"
 
 args.admm_config = OmegaConf.create()
 args.admm_config.rho = 0.1
@@ -33,7 +33,7 @@ args.model_config = OmegaConf.create()
 args.model_config.model = "ne_128"
 args.model_config.params = OmegaConf.create()
 args.model_config.params.in_dim = 3
-args.model_config.params.hidden = 256
+args.model_config.params.hidden = 64
 args.model_config.params.beta = 100
 args.model_config.params.alpha = 1e-6
 
@@ -67,17 +67,22 @@ args = set_cmd(args)
 # set best parameters
 def set_best(args):
     """Set the best parameters for each setting"""
+    
     if args.operator_config.sigma_blur == 1.0 and args.sigma_noise == 0.02:
-        args.prox_config.model_path = "exps/celeba/models/ne_lpn/s=0.05/model.pt"
-        args.admm_config.scale = 0.5
+        pass
+        #args.prox_config.model_path = "exps/celeba/models/ne_lpn/s=0.05/model.pt"
+        #args.admm_config.scale = 0.5
     elif args.operator_config.sigma_blur == 1.0 and args.sigma_noise == 0.04:
-        args.prox_config.model_path = "exps/celeba/models/ne_lpn/s=0.1/model.pt"
+        args.prox_config.model_path = "exps/celeba/models/ne_lpn_64ch/s=0.1/model.pt"
         args.admm_config.scale = 0.5
     elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.02:
-        args.prox_config.model_path = "exps/celeba/models/ne_lpn/s=0.1/model.pt"
+        args.prox_config.model_path = "exps/celeba/models/ne_lpn_64ch/s=0.1/model.pt"
         args.admm_config.scale = 2.0
     elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.04:
-        args.prox_config.model_path = "exps/celeba/models/ne_lpn/s=0.1/model.pt"
+        args.prox_config.model_path = "exps/celeba/models/ne_lpn_64ch/s=0.1/model.pt"
+        args.admm_config.scale = 0.5
+    elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.1:
+        args.prox_config.model_path = "exps/celeba/models/ne_lpn_64ch/s=0.1/model.pt"
         args.admm_config.scale = 0.5
     else:
         raise ValueError("Best parameters not defined for the given setting")
@@ -88,4 +93,4 @@ args = set_best(args)
 
 
 pp(args)
-main_celeba(args)
+metric_list = main_celeba(args)
