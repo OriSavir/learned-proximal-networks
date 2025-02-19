@@ -127,13 +127,14 @@ NE_SSIMs = np.array(NE_SSIMs, dtype=np.float64)
 LPN_SSIMs = np.array(LPN_SSIMs, dtype=np.float64)
 
 np.save("exps/celeba/ne_lpn_results/NE_PSNRs.npy", NE_PSNRs)
-np.save("exps/celeba/ne_lpn_results/LPN_PSNRs.npy", LPN_PSNRs)
+np.save("exps/celeba/original_lpn_results/LPN_PSNRs.npy", LPN_PSNRs)
 
-np.save("exps/celeba/original_lpn_results/NE_SSIMs.npy", NE_SSIMs)
+np.save("exps/celeba/ne_lpn_results/NE_SSIMs.npy", NE_SSIMs)
 np.save("exps/celeba/original_lpn_results/LPN_SSIMs.npy", LPN_SSIMs)
 
 # plot the reslts into two graphs
 
+sigma_noise = np.array(sigma_noise)
 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 ax[0].errorbar(sigma_noise, NE_PSNRs[:, 0], yerr=NE_PSNRs[:, 1], label='NE PSNR', fmt='-o')
 ax[0].errorbar(sigma_noise, LPN_PSNRs[:, 0], yerr=LPN_PSNRs[:, 1], label='LPN PSNR', fmt='-o')
@@ -153,7 +154,7 @@ ax[1].legend()
 ax[1].grid(True)
 
 plt.tight_layout()
-plt.savefig("exps/celeba/results/PSNR_SSIM_vs_Sigma_Noise.png")
+plt.savefig("exps/celeba/results_graphs/PSNR_SSIM_vs_Sigma_Noise.png")
 plt.show()
 
 
