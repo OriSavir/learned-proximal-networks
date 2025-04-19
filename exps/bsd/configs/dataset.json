@@ -1,0 +1,7 @@
+{
+    "dataset": "bsds500",
+    "params": {
+        "root": "data/bsds500/",
+        "image_size": 128
+    }
+}

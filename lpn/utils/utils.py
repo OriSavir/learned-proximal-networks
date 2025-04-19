@@ -9,6 +9,7 @@ import os
 from lpn.datasets.mnist import MNISTDataset
 from lpn.datasets.celeba import CelebADataset
 from lpn.datasets.mayoct import MayoCTDataset
+from lpn.datasets.bsds500 import BSDDataset
 
 
 def get_model(model_config):
@@ -178,6 +179,19 @@ def get_mayoct(config):
         img = dataset[idx]["image"]
         img = img.numpy()
         img = np.transpose(img, (1, 2, 0))  # (c, h, w) -> (h, w, c)
+        if config.squeeze:
+            img = np.squeeze(img, 2)
+        x_list.append(img)
+    return x_list
+
+def get_BSD500(config):
+    """Get BSD500 images"""
+    dataset = BSDDataset(root=config.root, split=config.split)
+    x_list = []
+    for idx in range(config.start_idx, config.start_idx + config.num_imgs):
+        img = dataset[idx]["image"]
+        img = img.numpy()
+        img = img.transpose(img, (1, 2, 0))
         if config.squeeze:
             img = np.squeeze(img, 2)
         x_list.append(img)
