@@ -143,10 +143,12 @@ def main_celeba_pgd(args):
             x = x - eta * A.adj(A(x) - y)
             x = prox(x)
             x = np.clip(x, 0, 1)
+            """
             print(
                 f"PSNR: {skimage_psnr(x_list[i], x, data_range=1.)}",
                 f"SSIM: {skimage_ssim(x_list[i], x, data_range=1., channel_axis=2)}",
             )
+            """
 
         xhat = np.clip(x, 0, 1)
         _save(xhat, os.path.join(args.out_dir, "pgd", args.prox_config.prox, "xhat"), i)

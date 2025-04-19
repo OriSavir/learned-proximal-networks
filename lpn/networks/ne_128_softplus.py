@@ -42,7 +42,7 @@ class LPN(nn.Module):
             ]
         )
 
-        self.act = nn.LeakyReLU()
+        self.act = nn.Softplus(beta=beta)
         self.alpha = alpha
 
     def scalar(self, x):

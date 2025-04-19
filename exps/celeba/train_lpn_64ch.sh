@@ -2,7 +2,7 @@ for NOISE in 0.1; do
     python lpn/train.py \
     --exp_dir exps/celeba/models/lpn_64ch/s=${NOISE} \
     --dataset_config_path exps/celeba/configs/dataset.json \
-    --model_config_path exps/celeba/configs/model.json \
+    --model_config_path exps/celeba/configs/model_lpn_64ch.json \
     --train_batch_size 64 \
     --dataloader_num_workers 8 \
     --num_steps 40000 \

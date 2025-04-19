@@ -10,10 +10,11 @@ class CelebADataset(Dataset):
             [
                 transforms.CenterCrop(image_size),
                 transforms.Resize(
-                    (image_size), ## change tupple size to fit MNIST network
+                    (28,28), ## change tupple size to fit MNIST network
                     interpolation=transforms.InterpolationMode.BILINEAR,
                     antialias=True,
                 ),
+                transforms.Grayscale(num_output_channels=1), ## Change to make grayscale to fit MNIST network
                 transforms.ToTensor(),
                 # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ]

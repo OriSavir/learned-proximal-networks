@@ -1,10 +1,9 @@
-"""Normalization Equivariant Learned proximal networks for input size of 128x128."""
+"""Learned proximal networks for input size of 128x128."""
 
 
 import numpy as np
 import torch
 from torch import nn
-from ..utils.norm_equiv import SortPool
 
 
 class LPN(nn.Module):
@@ -20,29 +19,29 @@ class LPN(nn.Module):
         self.hidden = hidden
         self.lin = nn.ModuleList(
             [
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 128
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 16
-                nn.Conv2d(hidden, 64, 16, bias=False, stride=1, padding=0, padding_mode="reflect"),  # 1
-                nn.Linear(64, 1, bias=False),
+                nn.Conv2d(in_dim, hidden, 3, bias=True, stride=1, padding=1),  # 128
+                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1),  # 64
+                nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1),  # 64
+                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1),  # 32
+                nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1),  # 32
+                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1),  # 16
+                nn.Conv2d(hidden, 64, 16, bias=False, stride=1, padding=0),  # 1
+                nn.Linear(64, 1),
             ]
         )
 
         self.res = nn.ModuleList(
             [
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 16
-                nn.Conv2d(in_dim, 64, 16, bias=False, stride=1, padding=0, padding_mode="reflect"),  # 1
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1),  # 64
+                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1),  # 64
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1),  # 32
+                nn.Conv2d(in_dim, hidden, 3, stride=1, padding=1),  # 32
+                nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1),  # 16
+                nn.Conv2d(in_dim, 64, 16, stride=1, padding=0),  # 1
             ]
         )
 
-        self.act = nn.LeakyReLU()
+        self.act = nn.Softplus(beta=beta)
         self.alpha = alpha
 
     def scalar(self, x):
@@ -76,7 +75,7 @@ class LPN(nn.Module):
         y = self.lin[-1](y)  # (batch, 1)
 
         # strongly convex
-        y = y**2 + self.alpha * x.reshape(x.shape[0], -1).pow(2).sum(1, keepdim=True)
+        y = y + self.alpha * x.reshape(x.shape[0], -1).pow(2).sum(1, keepdim=True)
 
         # return shape: (batch, 1)
         return y
@@ -97,16 +96,11 @@ class LPN(nn.Module):
         with torch.enable_grad():
             if not x.requires_grad:
                 x.requires_grad = True
-            #get channel-wise mean of x and subtract from input
-            mean_x = x.mean(dim=(2,3), keepdim=True)
-            x = x - mean_x
             x_ = x
             y = self.scalar(x_)
             grad = torch.autograd.grad(
                 y.sum(), x_, retain_graph=True, create_graph=True
             )[0]
-            #add back mean of x
-            grad = grad + mean_x
 
         return grad
 

@@ -2,7 +2,7 @@
     "model": "ne_128",
     "params": {
         "in_dim": 3,
-        "hidden": 128, 
+        "hidden": 86, 
         "beta": 100,
         "alpha": 1e-6
     }

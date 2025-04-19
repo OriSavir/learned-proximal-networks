@@ -1,6 +1,6 @@
 for NOISE in 0.1; do
     python lpn/train.py \
-    --exp_dir exps/celeba/models/ne_lpn_64ch/s=${NOISE} \
+    --exp_dir exps/celeba/models/ne_lpn_64ch_sgd/s=${NOISE} \
     --dataset_config_path exps/celeba/configs/dataset.json \
     --model_config_path exps/celeba/configs/model_ne.json \
     --train_batch_size 64 \
@@ -14,5 +14,6 @@ for NOISE in 0.1; do
     --validate_every_n_steps 1000 \
     --image_size 128 \
     --num_channels 3 \
+    --optimizer sgd \
     --sigma_noise ${NOISE}
 done

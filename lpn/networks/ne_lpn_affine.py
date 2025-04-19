@@ -1,10 +1,9 @@
-"""Normalization Equivariant Learned proximal networks for input size of 128x128."""
-
+"""Learned proximal networks for input size of 128x128."""
 
 import numpy as np
 import torch
 from torch import nn
-from ..utils.norm_equiv import SortPool
+from ..utils.norm_equiv import SortPool, AffineConv2d
 
 
 class LPN(nn.Module):
@@ -18,31 +17,28 @@ class LPN(nn.Module):
         super().__init__()
 
         self.hidden = hidden
-        self.lin = nn.ModuleList(
-            [
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 128
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(hidden, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 16
-                nn.Conv2d(hidden, 64, 16, bias=False, stride=1, padding=0, padding_mode="reflect"),  # 1
-                nn.Linear(64, 1, bias=False),
-            ]
-        )
 
-        self.res = nn.ModuleList(
-            [
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 64
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1, padding_mode="reflect"),  # 32
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1, padding_mode="reflect"),  # 16
-                nn.Conv2d(in_dim, 64, 16, bias=False, stride=1, padding=0, padding_mode="reflect"),  # 1
-            ]
-        )
+        self.lin = nn.ModuleList([
+            AffineConv2d(in_dim, hidden, 3, stride=1, padding=1),  # 128
+            AffineConv2d(hidden, hidden, 3, stride=2, padding=1),  # 64
+            AffineConv2d(hidden, hidden, 3, stride=1, padding=1),  # 64
+            AffineConv2d(hidden, hidden, 3, stride=2, padding=1),  # 32
+            AffineConv2d(hidden, hidden, 3, stride=1, padding=1),  # 32
+            AffineConv2d(hidden, hidden, 3, stride=2, padding=1),  # 16
+            AffineConv2d(hidden, 64, 16, stride=1, padding=0),  # 1
+            nn.Linear(64, 1, bias=False),
+        ])
 
-        self.act = nn.LeakyReLU()
+        self.res = nn.ModuleList([
+            AffineConv2d(in_dim, hidden, 3 , stride=2, padding=1),  # 64
+            AffineConv2d(in_dim, hidden, 3 , stride=1, padding=1),  # 64
+            AffineConv2d(in_dim, hidden, 3 , stride=2, padding=1),  # 32
+            AffineConv2d(in_dim, hidden, 3 , stride=1, padding=1),  # 32
+            AffineConv2d(in_dim, hidden, 3 , stride=2, padding=1),  # 16
+            AffineConv2d(in_dim, 64, 16, stride=1, padding=0),  # 1
+        ])
+
+        self.act = SortPool()
         self.alpha = alpha
 
     def scalar(self, x):
@@ -64,6 +60,7 @@ class LPN(nn.Module):
             y = self.act(core(y) + res(x_scaled))
 
         x_scaled = nn.functional.interpolate(x, (size[-1], size[-1]), mode="bilinear")
+     
         y = self.lin[-2](y) + self.res[-1](
             x_scaled
         )  # 1x1 if input is 128x128, 2x2 if input is 136x136
@@ -97,15 +94,14 @@ class LPN(nn.Module):
         with torch.enable_grad():
             if not x.requires_grad:
                 x.requires_grad = True
-            #get channel-wise mean of x and subtract from input
+            # get mean of x
             mean_x = x.mean(dim=(2,3), keepdim=True)
-            x = x - mean_x
-            x_ = x
+            x_ = x - mean_x
             y = self.scalar(x_)
             grad = torch.autograd.grad(
                 y.sum(), x_, retain_graph=True, create_graph=True
             )[0]
-            #add back mean of x
+            #add back mean
             grad = grad + mean_x
 
         return grad
