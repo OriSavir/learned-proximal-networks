@@ -14,12 +14,12 @@ class BSDDataset(Dataset):
 
         if split == "train":
             self.transform = transforms.Compose([
-                transforms.Resize((image_size, image_size), interpolation=transforms.InterpolationMode.BILINEAR),
+                transforms.RandomCrop(image_size),
                 transforms.ToTensor(),
             ])
         else:
             self.transform = transforms.Compose([
-                transforms.Resize((image_size, image_size), interpolation=transforms.InterpolationMode.BILINEAR),
+                transforms.CenterCrop(image_size),
                 transforms.ToTensor()
             ])
 
