@@ -154,8 +154,18 @@ def main_bsd_pgd(args):
         ssim = skimage_ssim(x_list[i], xhat, data_range=1.0, channel_axis=2)
         metric_list.append([psnr, ssim])
     metric_list = np.array(metric_list)
-    print(f"PSNR: {metric_list[:, 0].mean():.4f} +- {metric_list[:, 0].std():.4f}")
-    print(f"SSIM: {metric_list[:, 1].mean():.4f} +- {metric_list[:, 1].std():.4f}")
+    PSNR_mean = metric_list[:, 0].mean()
+    PSNR_std = metric_list[:, 0].std()
+    SSIM_mean = metric_list[:, 1].mean()
+    SSIM_std = metric_list[:, 1].std()
+    print(f"PSNR: {PSNR_mean:.4f} +- {PSNR_std:.4f}")
+    print(f"SSIM: {SSIM_mean:.4f} +- {SSIM_std:.4f}")
+    return {
+        "psnr_mean": PSNR_mean,
+        "psnr_std": PSNR_std,
+        "ssim_mean": SSIM_mean,
+        "ssim_std": SSIM_std,
+    }
 
 
 def main_bsd(args):
@@ -228,8 +238,18 @@ def main_bsd(args):
         ssim = skimage_ssim(x_list[i], xhat, data_range=1.0, channel_axis=2)
         metric_list.append([psnr, ssim])
     metric_list = np.array(metric_list)
-    print(f"PSNR: {metric_list[:, 0].mean():.4f} +- {metric_list[:, 0].std():.4f}")
-    print(f"SSIM: {metric_list[:, 1].mean():.4f} +- {metric_list[:, 1].std():.4f}")
+    PSNR_mean = metric_list[:, 0].mean()
+    PSNR_std = metric_list[:, 0].std()
+    SSIM_mean = metric_list[:, 1].mean()
+    SSIM_std = metric_list[:, 1].std()
+    print(f"PSNR: {PSNR_mean:.4f} +- {PSNR_std:.4f}")
+    print(f"SSIM: {SSIM_mean:.4f} +- {SSIM_std:.4f}")
+    return {
+        "psnr_mean": PSNR_mean,
+        "psnr_std": PSNR_std,
+        "ssim_mean": SSIM_mean,
+        "ssim_std": SSIM_std,
+    }
 
 
 def load_model(model_config, model_path):
