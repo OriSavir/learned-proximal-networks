@@ -1,7 +1,8 @@
 from omegaconf import OmegaConf
 from pprint import pp
+import os
 
-from lpn.inverse_bsd import main_bsd
+from lpn.inverse_bsd import main_bsd, main
 
 # set parameters manually
 args = OmegaConf.create()
@@ -21,7 +22,7 @@ args.sigma_noise = 0.02
 
 args.prox_config = OmegaConf.create()
 args.prox_config.prox = "lpn"
-args.prox_config.model_path = "exps/bsd/models/ne_by_forward_lpn/s=0.1/model.pt"
+args.prox_config.model_path = "exps/bsd/models/lpn/s=0.1/model.pt"
 
 args.admm_config = OmegaConf.create()
 args.admm_config.rho = 0.1
@@ -32,7 +33,7 @@ args.admm_config.order = "132"
 
 
 args.model_config = OmegaConf.create()
-args.model_config.model = "ne_by_forward_lpn_128"
+args.model_config.model = "lpn_128"
 args.model_config.params = OmegaConf.create()
 args.model_config.params.in_dim = 3
 args.model_config.params.hidden = 256
@@ -43,7 +44,7 @@ args.model_config.params.alpha = 1e-6
 args.seed = 0
 args.out_dir = None
 args.measure = False
-args.solver = "admm"
+args.solver = "pgd"
 args.data_dir = None
 
 
@@ -59,7 +60,10 @@ def set_cmd(args):
     pp(args_cmd)
     args.operator_config.sigma_blur = args_cmd.sigma_blur
     args.sigma_noise = args_cmd.sigma_noise
-    args.out_dir = f"exps/bsd/results/inverse/deblur/blur={args_cmd.sigma_blur}_noise={args_cmd.sigma_noise}/admm"
+    out_dir = f"exps/bsd/results/inverse/{args.model_config.model}/deblur/blur={args_cmd.sigma_blur}_noise={args_cmd.sigma_noise}/{args.solver}"
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    args.out_dir = out_dir
     return args
 
 
@@ -74,13 +78,13 @@ def set_best(args):
         #args.prox_config.model_path = "exps/celeba/models/lpn/s=0.05/model.pt"
         #args.admm_config.scale = 0.5
     elif args.operator_config.sigma_blur == 1.0 and args.sigma_noise == 0.04:
-        args.prox_config.model_path = "exps/bsd/models/ne_by_forward_lpn/s=0.1/model.pt"
+        args.prox_config.model_path = f"exps/bsd/models/lpn/s=0.1/model.pt"
         args.admm_config.scale = 0.5
     elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.02:
-        args.prox_config.model_path = "exps/bsd/models/ne_by_forward_lpn/s=0.1/model.pt"
+        args.prox_config.model_path = "exps/bsd/models/lpn/s=0.1/model.pt"
         args.admm_config.scale = 2.0
     elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.04:
-        args.prox_config.model_path = "exps/bsd/models/ne_by_forward_lpn/s=0.1/model.pt"
+        args.prox_config.model_path = "exps/bsd/models/lpn/s=0.1/model.pt"
         args.admm_config.scale = 0.5
     else:
         raise ValueError("Best parameters not defined for the given setting")
@@ -91,4 +95,4 @@ args = set_best(args)
 
 
 pp(args)
-main_bsd(args)
+main(args)

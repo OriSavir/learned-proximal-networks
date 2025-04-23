@@ -116,10 +116,13 @@ def measure(x_list, A, sigma_noise, seed):
 def main_bsd_pgd(args):
     A = get_A(args.operator_config)
     x_list = get_imgs(args.dataset_config)
+    """
     y_list = [
         np.load(os.path.join(args.out_dir, "meas", "y", f"{i}.npy"))
         for i in range(len(x_list))
     ]
+    """
+    y_list = measure(x_list, A, args.sigma_noise, args.seed)
 
     prox = get_prox(args)
 
@@ -149,7 +152,10 @@ def main_bsd_pgd(args):
             )
 
         xhat = np.clip(x, 0, 1)
-        _save(xhat, os.path.join(args.out_dir, "pgd", args.prox_config.prox, "xhat"), i)
+        if args.out_dir is not None:
+            _save(xhat, os.path.join(args.out_dir, args.prox_config.prox, "xhat"), i)
+            _save(y, os.path.join(args.out_dir, args.prox_config.prox, "y"), i)
+            _save(x_list[i], os.path.join(args.out_dir, args.prox_config.prox, "x"), i)
         psnr = skimage_psnr(x_list[i], xhat, data_range=1.0)
         ssim = skimage_ssim(x_list[i], xhat, data_range=1.0, channel_axis=2)
         metric_list.append([psnr, ssim])
