@@ -1,6 +1,6 @@
 for NOISE in 0.1; do
     python lpn/train.py \
-    --exp_dir exps/bsd/models/ne_by_forwad_lpn/s=${NOISE} \
+    --exp_dir exps/bsd/models/ne_by_forward_lpn/s=${NOISE} \
     --dataset_config_path exps/bsd/configs/dataset.json \
     --model_config_path exps/bsd/configs/model_forward_ne.json \
     --train_batch_size 64 \

@@ -140,6 +140,8 @@ def get_imgs(dataset_config):
         x_list = get_celeba(dataset_config)
     elif dataset_config.dataset == "mayoct":
         x_list = get_mayoct(dataset_config)
+    elif dataset_config.dataset == "bsds500":
+        x_list = get_BSD500(dataset_config)
     else:
         raise NotImplementedError
     return x_list
@@ -191,9 +193,7 @@ def get_BSD500(config):
     for idx in range(config.start_idx, config.start_idx + config.num_imgs):
         img = dataset[idx]["image"]
         img = img.numpy()
-        img = img.transpose(img, (1, 2, 0))
-        if config.squeeze:
-            img = np.squeeze(img, 2)
+        img = np.transpose(img, (1, 2, 0))
         x_list.append(img)
     return x_list
 
