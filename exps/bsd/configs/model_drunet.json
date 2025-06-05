@@ -1,0 +1,11 @@
+{
+  "model": "drunet",
+  "params": {
+    "in_dim": 3,
+    "out_dim": 3,
+    "nc": [64, 128, 256, 512],
+    "nb": 4,
+    "blind": true,
+    "mode": "norm-equiv"
+  }
+}

@@ -126,9 +126,9 @@ def main_bsd_pgd(args):
 
     prox = get_prox(args)
 
-    # parse PGD arguments
-    eta = 2.0  # step size
-    maxiter = 20  # number of iterations
+    # parse PGD arguments 
+    eta = args.pgd_config.eta # step size
+    maxiter = args.pgd_config.maxiter # number of iterations
     x0_type = "adjoint"
 
     idx_list = np.arange(20)
@@ -313,6 +313,10 @@ def get_prox(args):
         prox = functional.DnCNN("17M").prox
 
     elif args.prox_config.prox == "lpn":
+        model = load_model(args.model_config, args.prox_config.model_path)
+        prox = lambda x, lam=1.0, **kwargs: model.apply_numpy(np.asarray(x))
+
+    elif args.prox_config.prox == "drunet":
         model = load_model(args.model_config, args.prox_config.model_path)
         prox = lambda x, lam=1.0, **kwargs: model.apply_numpy(np.asarray(x))
 

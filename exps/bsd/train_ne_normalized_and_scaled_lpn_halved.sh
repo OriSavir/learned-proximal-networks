@@ -1,8 +1,11 @@
+#!/bin/bash
+GPU_ID=${1:-0}
+
 for NOISE in 0.1; do
-    python lpn/train.py \
-    --exp_dir exps/bsd/models/ne_lpn/s=${NOISE} \
+    CUDA_VISIBLE_DEVICES=$GPU_ID python lpn/train.py \
+    --exp_dir exps/bsd/models/ne_norm_and_scaled_halved_lpn/s=${NOISE} \
     --dataset_config_path exps/bsd/configs/dataset.json \
-    --model_config_path exps/bsd/configs/model_ne.json \
+    --model_config_path exps/bsd/configs/model_ne_normalized_and_scaled_halved.json \
     --train_batch_size 64 \
     --dataloader_num_workers 8 \
     --num_steps 40000 \

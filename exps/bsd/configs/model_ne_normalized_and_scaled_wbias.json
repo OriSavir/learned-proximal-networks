@@ -1,5 +1,5 @@
 {
-    "model": "ne_lpn_128",
+    "model": "ne_normalized_and_scaled_wbias_lpn_128",
     "params": {
         "in_dim": 3,
         "hidden": 256, 

@@ -4,6 +4,7 @@
 import numpy as np
 import torch
 from torch import nn
+from .equivariant_utils import SortPool, conv2d, upscale2, ResBlock, ResidualConnection
 
 
 class LPN(nn.Module):
@@ -17,6 +18,21 @@ class LPN(nn.Module):
         super().__init__()
 
         self.hidden = hidden
+
+        """"
+        self.lin = nn.ModuleList(
+            [
+                conv2d(in_dim, hidden, 3, stride=1, padding=1, mode='norm-equiv'),
+                conv2d(hidden, hidden, 3, stride=2, padding=1, mode='norm-equiv'),
+                conv2d(hidden, hidden, 3, stride=1, padding=1, mode='norm-equiv'),
+                conv2d(hidden, hidden, 3, stride=2, padding=1, mode='norm-equiv'),
+                conv2d(hidden, hidden, 3, stride=1, padding=1, mode='norm-equiv'),
+                conv2d(hidden, hidden, 3, stride=2, padding=1, mode='norm-equiv'),
+                conv2d(hidden, 64, 16, stride=1, padding=0, mode='norm-equiv'),
+                nn.Linear(64, 1, bias=False),
+            ]
+        )
+        """
         self.lin = nn.ModuleList(
             [
                 nn.Conv2d(in_dim, hidden, 3, bias=True, stride=1, padding=1),  # 128
@@ -29,7 +45,18 @@ class LPN(nn.Module):
                 nn.Linear(64, 1),
             ]
         )
-
+        """
+        self.res = nn.ModuleList(
+            [
+                conv2d(in_dim, hidden, 3, stride=2, padding=1, mode='norm-equiv'),
+                conv2d(in_dim, hidden, 3, stride=1, padding=1, mode='norm-equiv'),
+                conv2d(in_dim, hidden, 3, stride=2, padding=1, mode='norm-equiv'),
+                conv2d(in_dim, hidden, 3, stride=1, padding=1, mode='norm-equiv'),
+                conv2d(in_dim, hidden, 3, stride=2, padding=1, mode='norm-equiv'),
+                conv2d(in_dim, 64, 16, stride=1, padding=0, mode='norm-equiv'),
+            ]
+        )
+        """
         self.res = nn.ModuleList(
             [
                 nn.Conv2d(in_dim, hidden, 3, stride=2, padding=1),  # 64

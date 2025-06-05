@@ -1,11 +1,10 @@
-"""Normalization Equivariant Learned proximal networks for input size of 128x128."""
+"""Learned proximal networks for input size of 128x128."""
 
 
 import numpy as np
 import torch
 from torch import nn
-from ..utils.norm_equiv import SortPool
-
+from .equivariant_utils import SortPool
 
 class LPN(nn.Module):
     def __init__(
@@ -66,7 +65,7 @@ class LPN(nn.Module):
         x_scaled = nn.functional.interpolate(x, (size[-1], size[-1]), mode="bilinear")
         y = self.lin[-2](y) + self.res[-1](
             x_scaled
-        )  # 1x1 if input is 128x128, 2x2 if input is 136x136
+        )  # 1x1 if input is 1d28x128, 2x2 if input is 136x136
         y = self.act(y)
         # avg pooling
         assert y.shape[2] == y.shape[3] == 1
@@ -76,7 +75,7 @@ class LPN(nn.Module):
         y = self.lin[-1](y)  # (batch, 1)
 
         # strongly convex
-        y = y**2 + self.alpha * x.reshape(x.shape[0], -1).pow(2).sum(1, keepdim=True)
+        y = 0.5*y**2 + self.alpha * x.reshape(x.shape[0], -1).pow(2).sum(1, keepdim=True)
 
         # return shape: (batch, 1)
         return y
@@ -97,16 +96,18 @@ class LPN(nn.Module):
         with torch.enable_grad():
             if not x.requires_grad:
                 x.requires_grad = True
-            #get channel-wise mean of x and subtract from input
+            #normalize x
             mean_x = x.mean(dim=(2,3), keepdim=True)
-            x = x - mean_x
-            x_ = x
+            std_x = x.std(dim=(2,3), keepdim=True)
+            x_ = (x - mean_x) / std_x
+
             y = self.scalar(x_)
             grad = torch.autograd.grad(
                 y.sum(), x_, retain_graph=True, create_graph=True
             )[0]
-            #add back mean of x
-            grad = grad + mean_x
+
+            # unnormalize grad
+            grad = grad * std_x + mean_x
 
         return grad
 

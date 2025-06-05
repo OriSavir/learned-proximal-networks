@@ -1,98 +1,154 @@
+import os
+import argparse
 from omegaconf import OmegaConf
 from pprint import pp
-import os
+from lpn.inverse_bsd import main
 
-from lpn.inverse_bsd import main_bsd, main
-
-# set parameters manually
-args = OmegaConf.create()
-args.dataset_config = OmegaConf.create()
-args.dataset_config.dataset = "bsds500"
-args.dataset_config.root = "data/bsds500"
-args.dataset_config.start_idx = 100
-args.dataset_config.num_imgs = 20
-args.dataset_config.split = 'test'
-args.dataset_config.image_size = 128
-
-args.operator_config = OmegaConf.create()
-args.operator_config.operator = "blur"
-args.operator_config.sigma_blur = 1.0
-args.operator_config.image_size = 128
-args.sigma_noise = 0.02
-
-args.prox_config = OmegaConf.create()
-args.prox_config.prox = "lpn"
-args.prox_config.model_path = "exps/bsd/models/lpn/s=0.1/model.pt"
-
-args.admm_config = OmegaConf.create()
-args.admm_config.rho = 0.1
-args.admm_config.maxiter = 20
-args.admm_config.x0 = "adjoint"
-args.admm_config.scale = 0.5
-args.admm_config.order = "132"
-
-
-args.model_config = OmegaConf.create()
-args.model_config.model = "lpn_128"
-args.model_config.params = OmegaConf.create()
-args.model_config.params.in_dim = 3
-args.model_config.params.hidden = 256
-args.model_config.params.beta = 100
-args.model_config.params.alpha = 1e-6
-
-
-args.seed = 0
-args.out_dir = None
-args.measure = False
-args.solver = "pgd"
-args.data_dir = None
-
-
-# set commandline parameters
-def set_cmd(args):
-    """Set the input parameters from commandline"""
-    import argparse
-
+def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sigma_blur", type=float, required=True)
     parser.add_argument("--sigma_noise", type=float, required=True)
-    args_cmd = parser.parse_args()
-    pp(args_cmd)
-    args.operator_config.sigma_blur = args_cmd.sigma_blur
-    args.sigma_noise = args_cmd.sigma_noise
-    out_dir = f"exps/bsd/results/inverse/{args.model_config.model}/deblur/blur={args_cmd.sigma_blur}_noise={args_cmd.sigma_noise}/{args.solver}"
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    args.out_dir = out_dir
-    return args
+    parser.add_argument("--model_name", type=str, required=True, default="lpn_128")
+    parser.add_argument("--image_size", type=int, default=128)
+    parser.add_argument("--start_idx", type=int, default=100)
+    parser.add_argument("--num_imgs", type=int, default=20)
+    parser.add_argument("--split", type=str, default='test')
+    parser.add_argument("--solver", type=str, default='admm', choices=['admm', 'pgd'])
+    parser.add_argument("--seed", type=int, default=0)
+    return parser.parse_args()
 
+def build_config(args):
+    conf = OmegaConf.create()
 
-args = set_cmd(args)
+    conf.dataset_config = OmegaConf.create({
+        "dataset": "bsds500",
+        "root": "data/bsds500",
+        "start_idx": args.start_idx,
+        "num_imgs": args.num_imgs,
+        "split": args.split,
+        "image_size": args.image_size,
+    })
 
+    conf.operator_config = OmegaConf.create({
+        "operator": "blur",
+        "sigma_blur": args.sigma_blur,
+        "image_size": args.image_size,
+    })
 
-# set best parameters
-def set_best(args):
-    """Set the best parameters for each setting"""
-    if args.operator_config.sigma_blur == 1.0 and args.sigma_noise == 0.02:
-        raise ValueError("Best parameters not defined for the given setting")
-        #args.prox_config.model_path = "exps/celeba/models/lpn/s=0.05/model.pt"
-        #args.admm_config.scale = 0.5
-    elif args.operator_config.sigma_blur == 1.0 and args.sigma_noise == 0.04:
-        args.prox_config.model_path = f"exps/bsd/models/lpn/s=0.1/model.pt"
-        args.admm_config.scale = 0.5
-    elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.02:
-        args.prox_config.model_path = "exps/bsd/models/lpn/s=0.1/model.pt"
-        args.admm_config.scale = 2.0
-    elif args.operator_config.sigma_blur == 2.0 and args.sigma_noise == 0.04:
-        args.prox_config.model_path = "exps/bsd/models/lpn/s=0.1/model.pt"
-        args.admm_config.scale = 0.5
+    # Determine model prefix path based on model name
+    if args.model_name == "lpn_128":
+        model_prefix = "lpn"
+    elif args.model_name == "ne_lpn_128":
+        model_prefix = "ne_lpn"
+    elif args.model_name == "ne_normalized_and_scaled_lpn_128":
+        model_prefix = "ne_norm_and_scaled_lpn"
+    elif args.model_name == "ne_by_forward_lpn_128":
+        model_prefix = "ne_by_forward_lpn"
+    elif args.model_name == "drunet":
+        model_prefix = "drunet"
     else:
-        raise ValueError("Best parameters not defined for the given setting")
-    return args
+        raise ValueError(f"Unknown model name: {args.model_name}")
 
 
-args = set_best(args)
+    # create the config
+    if "lpn" in args.model_name:
+        model_params = {
+            "in_dim": 3,
+            "hidden": 256,
+            "beta": 100,
+            "alpha": 1e-6,
+        }
+    elif args.model_name == "drunet":
+        model_params = {
+            "in_nc": 3,
+            "out_nc": 3,
+            "nc": [64, 128, 256, 512],
+            "nb": 4,
+            "blind": True,
+            "mode": "norm-equiv"
+        }
+    else:
+        raise ValueError(f"No parameter config defined for model: {args.model_name}")
+
+    conf.model_config = OmegaConf.create({
+        "model": args.model_name,
+        "model_prefix": model_prefix,
+        "params": model_params,
+        "model_prefix_path": f"exps/bsd/models/{model_prefix}"
+    })
 
 
-pp(args)
-main(args)
+
+
+    conf.prox_config = OmegaConf.create({
+        "prox": "lpn" if "lpn" in args.model_name else "drunet",
+        "model_path": None  # Set below by set_best()
+    })
+
+    conf.admm_config = OmegaConf.create({
+        "rho": 0.1,
+        "maxiter": 20,
+        "x0": "adjoint",
+        "scale": 0.5,  # Default, will be overwritten
+        "order": "132",
+    })
+
+    conf.sigma_noise = args.sigma_noise
+    conf.seed = args.seed
+    conf.measure = False
+    conf.solver = args.solver
+    conf.data_dir = None
+
+    conf.out_dir = f"exps/bsd/results/inverse/{args.model_name}/deblur/blur={args.sigma_blur}_noise={args.sigma_noise}/{args.solver}"
+    os.makedirs(conf.out_dir, exist_ok=True)
+
+    return conf
+
+def set_best(conf):
+    key = (conf.operator_config.sigma_blur, conf.sigma_noise)
+    model_prefix = conf.model_config.model_prefix
+
+    if conf.solver.lower() == "admm":
+        admm_params = {
+            (1.0, 0.04): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 0.5, 20),
+            (2.0, 0.02): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 2.0, 20),
+            (2.0, 0.04): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 0.5, 20),
+        }
+
+        if key not in admm_params:
+            raise ValueError(f"Best ADMM parameters not defined for sigma_blur={key[0]}, sigma_noise={key[1]}")
+        
+        model_path, scale, maxiter = admm_params[key]
+        conf.prox_config.model_path = model_path
+        conf.admm_config.scale = scale
+        conf.admm_config.maxiter = maxiter
+
+    elif conf.solver.lower() == "pgd":
+        pgd_params = {
+            (1.0, 0.02): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 2.0, 20),
+            (1.0, 0.04): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 2.0, 20),
+            (2.0, 0.02): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 2.0, 20),
+            (2.0, 0.04): (f"exps/bsd/models/{model_prefix}/s=0.1/model.pt", 2.0, 20),
+        }
+
+        if key not in pgd_params:
+            raise ValueError(f"Best PGD parameters not defined for sigma_blur={key[0]}, sigma_noise={key[1]}")
+
+        model_path, eta, maxiter = pgd_params[key]
+        conf.prox_config.model_path = model_path
+        conf.pgd_config = OmegaConf.create()
+        conf.pgd_config.eta = eta
+        conf.pgd_config.maxiter = maxiter
+
+    else:
+        raise ValueError(f"Unknown solver: {conf.solver}")
+
+    return conf
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    config = build_config(args)
+    config = set_best(config)
+    pp(config)
+    main(config)

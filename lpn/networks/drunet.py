@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .equivariant_utils import conv2d, upscale2, ResBlock, ResidualConnection
+import numpy as np
 
 # Code inspired from https://github.com/cszn/DPIR/blob/master/models/network_unet.py
 
@@ -62,6 +63,27 @@ class DRUNet(nn.Module):
     def wclip(self):
         with torch.no_grad():
             pass
+    
+    def apply_numpy(self, x):
+        """Apply DRUNet to a NumPy image of shape (H, W, C) or (H, W)"""
+        assert x.shape[:2] == (128, 128), "DRUNet expects 128x128 inputs"
+        device = next(self.parameters()).device
+        x_dim = len(x.shape)
+        if x_dim == 2:
+            x = x[:, :, np.newaxis]
+        x = np.transpose(x, (2, 0, 1))
+        x = torch.tensor(x).unsqueeze(0).to(device).float()
+        with torch.no_grad():
+            if not self.blind:
+                # If noise map expected, concatenate sigma map
+                sigma = torch.full((1, 1, x.shape[2], x.shape[3]), 0.04, device=device)  # or make it an argument
+                x = torch.cat([x, sigma], dim=1)
+            x = self(x)
+        x = x.squeeze(0).cpu().numpy().transpose(1, 2, 0)
+        if x_dim == 2:
+            x = np.squeeze(x, 2)
+        return x
+
 
 
 __all__ = ["LPN"]

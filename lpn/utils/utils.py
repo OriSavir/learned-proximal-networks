@@ -20,7 +20,8 @@ def get_model(model_config):
     model = importlib.import_module("lpn.networks." + model_config.model).LPN(
         **model_config.params
     )
-    model.init_weights(-10, 0.1)
+    if hasattr(model, "init_weights"):
+        model.init_weights(-10, 0.1)
     return model
 
 
@@ -55,32 +56,27 @@ def load_dataset(dataset_config, split):
 
 
 def get_loss_hparams_and_lr(args, global_step):
-    """Get loss hyperparameters and learning rate based on training schedule.
-    Parameters:
-        args (argparse.Namespace): Arguments from command line.
-        global_step (int): Current training step.
-    """
     if global_step < args.num_steps_pretrain:
-        loss_hparams, lr = {"type": "l1"}, args.pretrain_lr
+        return {"type": "l1"}, args.pretrain_lr
+
+    step = global_step - args.num_steps_pretrain
+    num_steps = args.num_steps - args.num_steps_pretrain
+    num_steps_per_stage = num_steps // args.num_stages
+
+    if args.disable_sigma_schedule or (
+        args.disable_sigma_schedule_after is not None and global_step >= args.disable_sigma_schedule_after
+    ):
+        # Compute stage at cutoff step
+        cutoff_step = args.disable_sigma_schedule_after - args.num_steps_pretrain
+        cutoff_stage = min(cutoff_step // num_steps_per_stage, args.num_stages - 1)
+        sigma = args.sigma_min * (2 ** (args.num_stages - 1 - cutoff_stage))
     else:
-        num_steps = args.num_steps - args.num_steps_pretrain
-        step = global_step - args.num_steps_pretrain
+        stage = min(step // num_steps_per_stage, args.num_stages - 1)
+        sigma = args.sigma_min * (2 ** (args.num_stages - 1 - stage))
 
-        def _get_loss_hparams_and_lr(num_steps, step):
-            num_steps_per_stage = num_steps // args.num_stages
-            stage = step // num_steps_per_stage
-            if stage >= args.num_stages:
-                stage = args.num_stages - 1
-            loss_hparams = {
-                "type": "prox_matching",  # proximal matching
-                "sigma": args.sigma_min * (2 ** (args.num_stages - 1 - stage)),
-            }
-            lr = args.lr
-            return loss_hparams, lr
+    loss_hparams = {"type": "prox_matching", "sigma": sigma}
+    return loss_hparams, args.lr
 
-        loss_hparams, lr = _get_loss_hparams_and_lr(num_steps, step)
-
-    return loss_hparams, lr
 
 
 def get_loss(loss_hparams):

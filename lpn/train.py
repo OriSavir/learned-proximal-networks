@@ -118,6 +118,19 @@ def parse_args():
         choices=["adam", "sgd"],
         help="Optimizer to use.",
     )
+    parser.add_argument(
+        "--disable_sigma_schedule",
+        action="store_true",
+        default=False,
+        help="Disable sigma ramp-down in prox_matching loss (keeps sigma = sigma_min constant).",
+    )
+    parser.add_argument(
+        "--disable_sigma_schedule_after",
+        type=int,
+        default=None,
+        help="If set, disables sigma schedule after this step and uses sigma_min."
+    )
+
     args = parser.parse_args()
 
     if args.sigma_min is None:
@@ -199,18 +212,19 @@ def main(args):
     progress_bar.set_description(f"Train")
     while True:
         for step, batch in enumerate(train_dataloader):
-            if (
-                args.validate_every_n_steps > 0
-                and global_step % args.validate_every_n_steps == 0
-            ):
-                validator.validate(model, global_step)
 
-            model.train()
             # get loss hyperparameters and learning rate
             loss_hparams, lr = get_loss_hparams_and_lr(args, global_step)
 
             # get loss
             loss_func = get_loss(loss_hparams)
+
+            if (
+                args.validate_every_n_steps > 0
+                and global_step % args.validate_every_n_steps == 0
+            ):
+                validator.validate(model, args, global_step)
+
             # set learning rate
             for g in optimizer.param_groups:
                 g["lr"] = lr
@@ -265,23 +279,34 @@ def save_checkpoint(args, global_step, model, optimizer, loss, filename):
 def train_step(model, optimizer, batch, loss_func, sigma_noise, device):
     clean_images = batch["image"].to(device)
     noise = torch.randn_like(clean_images)
-    if type(sigma_noise) == list:
+    
+    if isinstance(sigma_noise, list):
         # uniform random noise level
         sigma_noise = (
             torch.rand(1).to(noise.device) * (sigma_noise[1] - sigma_noise[0])
             + sigma_noise[0]
         )
+
     noisy_images = clean_images + sigma_noise * noise
-    out = model(noisy_images)
+
+    if hasattr(model, 'blind') and not model.blind:
+        out = model(noisy_images, sigma_noise)
+    else:
+        out = model(noisy_images)
 
     loss = loss_func(out, clean_images)
+
+    # Check for invalid loss
+    if not torch.isfinite(loss):
+        print(f"[Warning] Invalid loss detected: {loss.item()}")
+
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
     model.wclip()  # clip weights to non-negative values to ensure convexity
 
-    result = {"loss": loss}
-    return result
+    return {"loss": loss}
+
 
 
 if __name__ == "__main__":

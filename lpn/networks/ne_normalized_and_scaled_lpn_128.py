@@ -4,8 +4,7 @@
 import numpy as np
 import torch
 from torch import nn
-from ..utils.norm_equiv import SortPool
-
+from .equivariant_utils import SortPool
 
 class LPN(nn.Module):
     def __init__(
@@ -35,10 +34,10 @@ class LPN(nn.Module):
             [
                 nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1),  # 64
                 nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1),  # 64
-                nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1),  # 32
+                nn.Conv2d(in_dim, hidden, 3, bias=False,stride=2, padding=1),  # 32
                 nn.Conv2d(in_dim, hidden, 3, bias=False, stride=1, padding=1),  # 32
                 nn.Conv2d(in_dim, hidden, 3, bias=False, stride=2, padding=1),  # 16
-                nn.Conv2d(in_dim, 64, 16, bias=False, stride=1, padding=0),  # 1
+                nn.Conv2d(in_dim, 64, 16, bias=False,stride=1, padding=0),  # 1
             ]
         )
 
@@ -66,7 +65,7 @@ class LPN(nn.Module):
         x_scaled = nn.functional.interpolate(x, (size[-1], size[-1]), mode="bilinear")
         y = self.lin[-2](y) + self.res[-1](
             x_scaled
-        )  # 1x1 if input is 128x128, 2x2 if input is 136x136
+        )  # 1x1 if input is 1d28x128, 2x2 if input is 136x136
         y = self.act(y)
         # avg pooling
         assert y.shape[2] == y.shape[3] == 1
