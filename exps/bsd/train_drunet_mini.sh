@@ -1,7 +1,9 @@
 #!/bin/bash
 
+GPU_ID=${1:-0}
+
 for NOISE in 0.1; do
-    python lpn/train.py \
+    CUDA_VISIBLE_DEVICES=$GPU_ID python lpn/train.py \
     --exp_dir exps/bsd/models/drunet_mini/s=${NOISE} \
     --dataset_config_path exps/bsd/configs/dataset.json \
     --model_config_path exps/bsd/configs/model_drunet_mini.json \

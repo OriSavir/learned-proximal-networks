@@ -1,0 +1,14 @@
+{
+  "model": "modified_drunet",
+  "params": {
+    "in_nc": 3,
+    "out_nc": 3,
+    "nc": [64, 128, 256, 512],
+    "nb": 4,
+    "blind": true,
+    "use_norm": true,
+    "use_bias": false,
+    "activation": "sortpool",
+    "mode": "ordinary"
+  }
+}
