@@ -73,14 +73,24 @@ def invert_mse(x, model):
 
 
 def gt_cvx(x):
-    """ground-truth convex function for the prox of L1.
-    x: numpy array, (n,)
+    """Ground-truth convex function for the negative log-prior of N(0,1).
+    x: numpy array, shape (n,)
     """
-    return 0.5 * ((x - 1) ** 2) * (x > 1) + 0.5 * ((x + 1) ** 2) * (x < -1)
+    return 0.5 * x**2 + 0.5 * np.log(2 * np.pi)
 
 
-def soft_thr(x, lam=1):
-    """soft thresholding.
-    x: numpy array, (n,)
+def prox_gaussian(x, lam=1.0):
     """
-    return np.sign(x) * np.maximum(np.abs(x) - lam, np.zeros_like(x))
+    Proximal operator of the negative log of N(0,1).
+
+    For phi(z) = 0.5 * z^2, the prox is:
+        prox_{lam * phi}(x) = x / (1 + lam)
+
+    Args:
+        x (np.ndarray): input array
+        lam (float): regularization parameter λ
+
+    Returns:
+        np.ndarray: prox result
+    """
+    return x / (1 + lam)
