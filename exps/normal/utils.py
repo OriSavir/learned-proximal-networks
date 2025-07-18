@@ -56,11 +56,11 @@ def invert_mse(x, model):
     """
     device = next(model.parameters()).device
     x = torch.tensor(x).unsqueeze(1).float().to(device)
-    y = torch.zeros(x.shape).to(device)
+    y = torch.zeros_like(x).to(device) + 0.1
 
     optimizer = torch.optim.Adam([y], lr=1e-2)
 
-    for i in range(1000):
+    for i in range(10000):
         optimizer.zero_grad()
         loss = (model(y) - x).pow(2).mean()
         loss.backward()
@@ -76,7 +76,7 @@ def gt_cvx(x):
     """Ground-truth convex function for the negative log-prior of N(0,1).
     x: numpy array, shape (n,)
     """
-    return 0.5 * x**2 + 0.5 * np.log(2 * np.pi)
+    return (x**2) / 4
 
 
 def prox_gaussian(x, lam=1.0):

@@ -46,12 +46,11 @@ class NE_LPN_By_Design(nn.Module):
         with torch.enable_grad():
             if not x.requires_grad:
                 x.requires_grad = True
-            mean_x = x.mean(dim=0, keepdim=True)
-            x = x - mean_x
+            x = x
             y = self.scalar(x)
             grad = torch.autograd.grad(
                 y.sum(), x, retain_graph=True, create_graph=True
             )[0]
-            grad = grad + mean_x # doing this ensures shift equivariance, but not of the prox
+            grad = grad
 
         return grad

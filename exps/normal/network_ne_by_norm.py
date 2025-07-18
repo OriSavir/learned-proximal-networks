@@ -45,13 +45,12 @@ class NE_LPN_By_Norm(nn.Module):
         with torch.enable_grad():
             if not x.requires_grad:
                 x.requires_grad = True
-            x_mean = x.mean(dim=0, keepdim=True)
-            x_std = x.std(dim=0, keepdim=True)
-            x = (x - x_mean) / (x_std)
+            x_abs = torch.abs(x)
+            x = (x) / (x_abs)
             y = self.scalar(x)
             grad = torch.autograd.grad(
                 y.sum(), x, retain_graph=True, create_graph=True
             )[0]
-            grad = grad * x_std + x_mean
+            grad = grad * x_abs
 
         return grad
