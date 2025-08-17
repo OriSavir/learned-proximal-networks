@@ -19,27 +19,17 @@ class NE_LPN_By_Design(nn.Module):
         self.res = nn.ModuleList(
             [*[nn.Linear(in_dim, hidden, bias=False) for _ in range(layers)], nn.Linear(in_dim, 1, bias=False)]
         )
-        self.act = nn.LeakyReLU(negative_slope=0.0, inplace=False)
+        self.act = nn.Softplus(beta=beta)
 
     def scalar(self, x):
-        B, D = x.shape
-
-        # perform projections
-        mu = x.mean(dim=1, keepdim=True)        # per-sample global mean
-        x_perp = x - mu                         # (I - P)x
-        n = float(D)
-        s = x.sum(dim=1, keepdim=True)          # (B,1) = 1^T x
-        proj_term = 0.5 * (s ** 2) / n          # 0.5 * ||P x||^2
-
-        y = x_perp.clone()
+        y = x.clone()
         y = self.act(self.lin[0](y))
         for core, res in zip(self.lin[1:-1], self.res[:-1]):
-            y = self.act(core(y) + res(x_perp))
-        y = self.lin[-1](y) + self.res[-1](x_perp) 
+            y = self.act(core(y) + res(x))
 
-        phi_term = y ** 2
-        return phi_term + proj_term
-
+        y = self.lin[-1](y) + self.res[-1](x)
+        y = y**2 # square the output to ensure scale equivariance of the prox
+        return y
 
     def init_weights(self, mean, std):
         with torch.no_grad():
