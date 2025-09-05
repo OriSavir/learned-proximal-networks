@@ -1,9 +1,23 @@
 """1-D LPN"""
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
+class SortPool1D(nn.Module):
+    def __init__(self):
+        super().__init__()
 
-class NE_LPN_By_Design(nn.Module):
+    def forward(self, x):
+        N, C = x.size()
+        assert C % 2 == 0, "for the 1d implementation, the number of features must be even"
+        x = x.view(N, C//2, 2)
+        x1, x2 = x[:, :, 0:1], x[:, :, 1:2]
+        diff = F.relu(x1 - x2)
+        mins = x1 - diff
+        maxs = x2 + diff
+        return torch.cat([mins, maxs], dim=2).view(N, C)
+
+class Scale_LPN_By_Design(nn.Module):
     def __init__(self, in_dim, hidden, layers=1, beta=1):
         super().__init__()
 
@@ -17,9 +31,9 @@ class NE_LPN_By_Design(nn.Module):
         )
 
         self.res = nn.ModuleList(
-            [*[nn.Linear(in_dim, hidden, bias=False) for _ in range(layers)], nn.Linear(in_dim, 1, bias=False)]
+            [*[nn.Linear(in_dim, hidden, bias=False) for _ in range(layers)], nn.Linear(in_dim, 1)]
         )
-        self.act = nn.Softplus(beta=beta)
+        self.act = SortPool1D()
 
     def scalar(self, x):
         y = x.clone()

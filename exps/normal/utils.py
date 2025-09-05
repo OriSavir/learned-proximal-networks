@@ -94,3 +94,62 @@ def prox_gaussian(x, lam=1.0):
         np.ndarray: prox result
     """
     return x / (1 + lam)
+
+def split_normal_log_prior(x, mean=0.0, std_left=1.0, std_right=2.0):
+    """
+    Compute the log-prior of a split normal distribution.
+
+    Args:
+        x (np.ndarray): input array
+        mean (float): mean of the distribution
+        std_left (float): standard deviation for x < mean
+        std_right (float): standard deviation for x >= mean
+
+    Returns:
+        np.ndarray: log-prior values
+    """
+    log_prior = np.where(
+        x < mean,
+        0.5 * ((x - mean) / std_left) ** 2 - np.log(std_left * np.sqrt(2 * np.pi)),
+        0.5 * ((x - mean) / std_right) ** 2 - np.log(std_right * np.sqrt(2 * np.pi))
+    )
+    return log_prior
+
+def prox_split_normal(x, lam=1.0, mean=0.0, std_left=1.0, std_right=2.0):
+    """
+    Proximal operator for the split normal distribution.
+
+    Args:
+        x (np.ndarray): input array
+        mean (float): mean of the distribution
+        std_left (float): standard deviation for x < mean
+        std_right (float): standard deviation for x >= mean
+
+    Returns:
+        np.ndarray: prox result
+    """
+    a_left  = lam / (std_left**2)
+    a_right = lam / (std_right**2)
+    return np.where(
+        x < mean,
+        (x + a_left * mean)  / (1 + a_left),
+        (x + a_right * mean) / (1 + a_right)
+    )
+
+def gt_cvx_split_normal(x, mean=0.0, std_left=1.0, std_right=2.0):
+    """
+    Get the convex function for the split normal distribution.
+
+    Args:
+        mean (float): mean of the distribution
+        std_left (float): standard deviation for x < mean
+        std_right (float): standard deviation for x >= mean
+
+    Returns:
+        function: convex function
+    """
+    return np.where(
+        x < mean,
+        (x**2) / 4,
+        2 * (x**2) / 5
+    )
