@@ -108,10 +108,11 @@ def split_normal_log_prior(x, mean=0.0, std_left=1.0, std_right=2.0):
     Returns:
         np.ndarray: log-prior values
     """
+    norm_const = np.log(np.sqrt(2 / np.pi)  * 1 / (std_left + std_right))
     log_prior = np.where(
         x < mean,
-        0.5 * ((x - mean) / std_left) ** 2 - np.log(std_left * np.sqrt(2 * np.pi)),
-        0.5 * ((x - mean) / std_right) ** 2 - np.log(std_right * np.sqrt(2 * np.pi))
+        -1 * norm_const + 0.5 * ((x - mean) / std_left) ** 2,
+        -1 * norm_const + 0.5 * ((x - mean) / std_right) ** 2
     )
     return log_prior
 
